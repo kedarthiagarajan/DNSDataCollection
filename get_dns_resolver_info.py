@@ -38,33 +38,15 @@ def get_unix_dns_ips():
 
 
 def get_windows_dns_ips():
-    output = subprocess.check_output(["ipconfig", "-all"])
-    ipconfig_all_list = output.split('\n')
-
-    dns_ips = []
-    for i in range(0, len(ipconfig_all_list)):
-        if "DNS Servers" in ipconfig_all_list[i]:
-            # get the first dns server ip
-            first_ip = ipconfig_all_list[i].split(":")[1].strip()
-            if not is_valid_ipv4_address(first_ip):
-                continue
-            dns_ips.append(first_ip)
-            # get all other dns server ips if they exist
-            k = i+1
-            while k < len(ipconfig_all_list) and ":" not in ipconfig_all_list[k]:
-                ip = ipconfig_all_list[k].strip()
-                if is_valid_ipv4_address(ip):
-                    dns_ips.append(ip)
-                k += 1
-            # at this point we're done
-            break
-    return dns_ips
+    import dns.resolver
+    dns_resolver = dns.resolver.Resolver()
+    return [dns_resolver.nameservers[-1]]
 
 
 def validIPAddress(IP: str) -> str:
     try:
         return "v4" if type(ip_address(IP)) is IPv4Address else "v6"
-    except ValueError:
+    except ValueError as e:
         return "Invalid"
 
 def get_frontend_resolver_ip(platform):
@@ -100,6 +82,9 @@ def do_experiment(platform):
 
 def main():
     do_experiment(platform.system())
+    print("This screen will stay open for 100 seconds, please copy your experiment ID within that time")
+    time.sleep(100)
+        
 
 if __name__ == "__main__":
     main()
